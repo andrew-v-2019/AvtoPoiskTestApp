@@ -103,5 +103,15 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AvtoPoiskTestApp.Models\AvtoPoiskTestApp.Models.csproj">
+      <Project>{EF49F2A7-9511-496A-9C8D-CA2DEE0801B2}</Project>
+      <Name>AvtoPoiskTestApp.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AvtoPoiskTestApp.Services\AvtoPoiskTestApp.Services.csproj">
+      <Project>{B6879516-1274-4E80-8502-FE79E672D8CC}</Project>
+      <Name>AvtoPoiskTestApp.Services</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

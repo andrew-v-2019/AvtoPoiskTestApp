@@ -11,9 +11,11 @@ namespace AvtoPoiskTestApp.Services
     {
         private const string PasswordsFileName = "credentials.json";
         private readonly string _passwordsFileFullPath;
+        private readonly string _initialJson;
 
-        public PasswordProvider()
+        public PasswordProvider(string initialJson = "")
         {
+            _initialJson = initialJson;
             _passwordsFileFullPath = AppDomain.CurrentDomain.BaseDirectory + PasswordsFileName;
         }
     
@@ -37,14 +39,35 @@ namespace AvtoPoiskTestApp.Services
         }
 
 
+        private void InitialCreate()
+        {
+            if (string.IsNullOrWhiteSpace(_initialJson))
+            {
+                throw new Exception("Settings not filled");
+            }
+            var items = GetQueueFromJson(_initialJson);
+            SaveAccounts(items);
+        }
+
         private Queue<Account> ReadAccounts()
         {
+            if (!File.Exists(_passwordsFileFullPath))
+            {
+                InitialCreate();
+            }
+
             using (var r = new StreamReader(_passwordsFileFullPath))
             {
                 var json = r.ReadToEnd();
-                var items = JsonConvert.DeserializeObject<Queue<Account>>(json);
+                var items = GetQueueFromJson(json);
                 return items;
             }
+        }
+
+        private static Queue<Account> GetQueueFromJson(string json)
+        {
+            var items = JsonConvert.DeserializeObject<Queue<Account>>(json);
+            return items;
         }
     }
 }
