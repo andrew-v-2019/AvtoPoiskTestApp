@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using AvtoPoiskTestApp.Services.Interfaces;
 
 namespace AvtoPoiskTestApp.Services
 {
-    public class EncryptionService
+    public class EncryptionService: IEncryptionService
     {
         private const string Passphrase = "C70E53CD-31C2-4301-9309-60958BC32C93";
         public string Encrypt(string password)
