@@ -5,5 +5,6 @@ namespace AvtoPoiskTestApp.Services.Interfaces
     {
         T ReadFromFile<T>(string path);
         void SaveToFile<T>(T item, string path);
+        bool Exists(string path);
     }
 }

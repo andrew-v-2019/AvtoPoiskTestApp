@@ -13,16 +13,16 @@ namespace AvtoPoiskTestApp.Tests
     //Checks the Round-robin algoritm
     public class PasswordProviderTests
     {
-        private const string PasswordsFileName = "credentials.json";
         private string _passwordsFileFullPath;
-
         private PasswordProvider _passwordProvider;
+        private FileService _fileService;
 
         [SetUp]
         public void SetUp()
         {
-            _passwordProvider = new PasswordProvider();
-            _passwordsFileFullPath = AppDomain.CurrentDomain.BaseDirectory + PasswordsFileName;
+            _fileService = new FileService();
+            _passwordProvider = new PasswordProvider(_fileService);
+            _passwordsFileFullPath = _passwordProvider.GetPasswordFileName();
         }
 
         [Test]

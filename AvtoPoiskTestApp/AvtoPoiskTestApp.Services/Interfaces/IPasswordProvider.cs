@@ -5,5 +5,6 @@ namespace AvtoPoiskTestApp.Services.Interfaces
     public interface IPasswordProvider
     {
         Account GetNextCredentials();
+        string GetPasswordFileName();
     }
 }

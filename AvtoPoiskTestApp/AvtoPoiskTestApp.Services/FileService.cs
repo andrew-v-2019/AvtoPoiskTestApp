@@ -6,6 +6,12 @@ namespace AvtoPoiskTestApp.Services
 {
     public class FileService: IFileService
     {
+
+        public bool Exists(string path)
+        {
+            return File.Exists(path);
+        }
+
         public T ReadFromFile<T>(string path)
         {
             using (var r = new StreamReader(path))

@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Navigation;
-using AvtoPoiskTestApp.Services;
+using AvtoPoiskTestApp.Models;
 using AvtoPoiskTestApp.Services.Interfaces;
+using AvtoPoiskTestApp.Services.Unity;
 using mshtml;
+using Newtonsoft.Json;
 using NLog;
 
 namespace AvtoPoiskTestApp.Wcf
@@ -19,35 +22,48 @@ namespace AvtoPoiskTestApp.Wcf
         private bool _initialLoadPassed;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger(); //Set up NLog
 
-        private readonly IPasswordProvider _passwordProvider;
-        private readonly IEncryptionService _encryptionService;
+        private IPasswordProvider _passwordProvider;
+        private IEncryptionService _encryptionService;
+        private IFileService _fileService;
 
-        public MainWindow()
+
+        private void InjectServices()
         {
-            try
+            ServiceInjector.ConfigureServices();
+            _passwordProvider = ServiceInjector.Retrieve<IPasswordProvider>();
+            _encryptionService = ServiceInjector.Retrieve<IEncryptionService>();
+            _fileService = ServiceInjector.Retrieve<IFileService>();
+        }
+
+        private void InitialCreate()
+        {
+            var passwordsFileFullPath = _passwordProvider.GetPasswordFileName();
+
+            if (_fileService.Exists(passwordsFileFullPath))
             {
-                var credentials = initialCredentials.InitialCredentials;
-                _passwordProvider = new PasswordProvider(credentials);
-                _encryptionService = new EncryptionService();
-
-                InitializeComponent();
-                ShowLoader();
-
-                WebBrowser.LoadCompleted += WebBrowserOnLoadCompleted;
-                WebBrowser.Navigating += WebBrowserOnNavigating;
-                WebBrowser.Navigate(BaseUrl);
-
-                WebBrowser.PreviewKeyDown += WebBrowserOnPreviewKeyDown; //Disable backspace
+                return;
             }
-            catch (Exception e)
-            {
-                Logger.Error(e); // Log exception
-            }
+
+            var credentials = initialCredentials.InitialCredentials;
+            var items = JsonConvert.DeserializeObject<List<Account>>(credentials);
+            _fileService.SaveToFile(items, passwordsFileFullPath);
+        }
+
+        private void RegisterHandlers()
+        {
+            WebBrowser.LoadCompleted += WebBrowserOnLoadCompleted;
+            WebBrowser.Navigating += WebBrowserOnNavigating;
+            WebBrowser.PreviewKeyDown += WebBrowserOnPreviewKeyDown; //Disable hot keys
         }
 
         private static void WebBrowserOnPreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Back)
+            {
+                e.Handled = true;
+            }
+
+            if (e.Key == Key.F5)
             {
                 e.Handled = true;
             }
@@ -58,6 +74,25 @@ namespace AvtoPoiskTestApp.Wcf
             if (_initialLoadPassed)
             {
                 ShowLoader();
+            }
+        }
+
+        public MainWindow()
+        {
+            try
+            {
+                InjectServices(); //Configure unity
+                InitialCreate();  //Create file with passwords if has not been created
+
+                InitializeComponent();
+                ShowLoader();
+
+                RegisterHandlers();
+                WebBrowser.Navigate(BaseUrl);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e); // Log exception
             }
         }
 
@@ -91,7 +126,7 @@ namespace AvtoPoiskTestApp.Wcf
                 return;
             }
 
-            DisableContextMenu();
+            DisableContextMenu(); //Disable context menu
             HideJsScriptErrors(WebBrowser);
 
             if (doc.IsLoginPage())
