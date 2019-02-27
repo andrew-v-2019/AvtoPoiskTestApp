@@ -52,12 +52,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EncryptionService.cs" />
-    <Compile Include="FileService.cs" />
+    <Compile Include="Services\EncryptionService.cs" />
+    <Compile Include="Services\FileService.cs" />
     <Compile Include="Interfaces\IEncryptionService.cs" />
     <Compile Include="Interfaces\IFileService.cs" />
     <Compile Include="Interfaces\IPasswordProvider.cs" />
-    <Compile Include="PasswordProvider.cs" />
+    <Compile Include="Services\PasswordProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unity\ServiceInjector.cs" />
   </ItemGroup>

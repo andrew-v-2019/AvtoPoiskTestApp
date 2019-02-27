@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Navigation;
 using AvtoPoiskTestApp.Models;
@@ -82,7 +80,7 @@ namespace AvtoPoiskTestApp.Wcf
             try
             {
                 InjectServices(); //Configure unity
-                InitialCreate();  //Create file with passwords if has not been created
+                InitialCreate(); //Create file with passwords if has not been created
 
                 InitializeComponent();
                 ShowLoader();
@@ -127,7 +125,7 @@ namespace AvtoPoiskTestApp.Wcf
             }
 
             DisableContextMenu(); //Disable context menu
-            HideJsScriptErrors(WebBrowser);
+            WebBrowser.HideJsScriptErrors();
 
             if (doc.IsLoginPage())
             {
@@ -196,15 +194,6 @@ namespace AvtoPoiskTestApp.Wcf
 
             doc.RemoveElementWithId("tools");
             doc.RemoveElementWithId("footer");
-        }
-
-        private static void HideJsScriptErrors(WebBrowser wb)
-        {
-            var fld = typeof(WebBrowser).GetField("_axIWebBrowser2", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (fld == null)
-                return;
-            var obj = fld.GetValue(wb);
-            obj?.GetType().InvokeMember("Silent", BindingFlags.SetProperty, null, obj, new object[] {true});
         }
     }
 }

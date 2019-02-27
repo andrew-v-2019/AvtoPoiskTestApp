@@ -120,11 +120,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>initialCredentials.resx</DependentUpon>
     </Compile>
-    <Compile Include="JSScripts.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>JSScripts.resx</DependentUpon>
-    </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -147,10 +142,6 @@
     <EmbeddedResource Include="initialCredentials.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>initialCredentials.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="JSScripts.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>JSScripts.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using AvtoPoiskTestApp.Services.Interfaces;
 
-namespace AvtoPoiskTestApp.Services
+namespace AvtoPoiskTestApp.Services.Services
 {
     public class EncryptionService: IEncryptionService
     {

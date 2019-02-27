@@ -1,4 +1,4 @@
-﻿using AvtoPoiskTestApp.Services;
+﻿using AvtoPoiskTestApp.Services.Services;
 using NUnit.Framework;
 
 namespace AvtoPoiskTestApp.Tests

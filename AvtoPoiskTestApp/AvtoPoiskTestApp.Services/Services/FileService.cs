@@ -2,7 +2,7 @@
 using AvtoPoiskTestApp.Services.Interfaces;
 using Newtonsoft.Json;
 
-namespace AvtoPoiskTestApp.Services
+namespace AvtoPoiskTestApp.Services.Services
 {
     public class FileService: IFileService
     {

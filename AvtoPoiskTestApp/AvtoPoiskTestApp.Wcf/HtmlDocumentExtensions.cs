@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+using System.Windows.Controls;
 using mshtml;
 
 namespace AvtoPoiskTestApp.Wcf
@@ -50,7 +52,15 @@ namespace AvtoPoiskTestApp.Wcf
             return result;
         }
 
-     
+
+        public static void HideJsScriptErrors(this WebBrowser wb)
+        {
+            var fld = typeof(WebBrowser).GetField("_axIWebBrowser2", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (fld == null)
+                return;
+            var obj = fld.GetValue(wb);
+            obj?.GetType().InvokeMember("Silent", BindingFlags.SetProperty, null, obj, new object[] {true});
+        }
 
     }
 }

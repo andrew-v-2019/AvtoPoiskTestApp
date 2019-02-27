@@ -1,4 +1,5 @@
 ﻿using AvtoPoiskTestApp.Services.Interfaces;
+using AvtoPoiskTestApp.Services.Services;
 using Unity;
 
 namespace AvtoPoiskTestApp.Services.Unity
