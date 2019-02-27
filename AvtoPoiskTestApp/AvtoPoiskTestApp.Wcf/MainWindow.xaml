@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         Title="AvtoPoisk" WindowState="Maximized" >
     <Grid HorizontalAlignment="Stretch" 
-          VerticalAlignment="Stretch" >
-        <WebBrowser Name="WebBrowser"/>
+          VerticalAlignment="Stretch" Stylus.IsPressAndHoldEnabled="false" >
+        <WebBrowser ContextMenu="{x:Null}" Name="WebBrowser"/>
         <ProgressBar Name="ProgressBar"  HorizontalAlignment="Center" Height="20" VerticalAlignment="Center" Width="100" Maximum="5" Opacity="0.7"  IsIndeterminate="True">
             <ProgressBar.Effect>
                 <BlurEffect Radius="1" RenderingBias="Quality"/>

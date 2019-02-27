@@ -1,8 +1,13 @@
-﻿using System.Windows;
+﻿using System;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Navigation;
 using AvtoPoiskTestApp.Services;
 using AvtoPoiskTestApp.Services.Interfaces;
 using mshtml;
+using NLog;
 
 namespace AvtoPoiskTestApp.Wcf
 {
@@ -11,42 +16,122 @@ namespace AvtoPoiskTestApp.Wcf
         private const string BaseUrl = "http://public.servicebox-parts.com/pages/index.jsp";
         private const string WorkingCatalog = "http://public.servicebox-parts.com/docprAP/";
         private const string LanguageId = "ru_RU";
+        private bool _initialLoadPassed;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger(); //Set up NLog
 
         private readonly IPasswordProvider _passwordProvider;
         private readonly IEncryptionService _encryptionService;
 
         public MainWindow()
         {
-            var c = initialCredentials.InitialCredentials;
-            _passwordProvider = new PasswordProvider(c);
-            _encryptionService = new EncryptionService();
+            try
+            {
+                var credentials = initialCredentials.InitialCredentials;
+                _passwordProvider = new PasswordProvider(credentials);
+                _encryptionService = new EncryptionService();
 
-            InitializeComponent();
+                InitializeComponent();
+                ShowLoader();
+
+                WebBrowser.LoadCompleted += WebBrowserOnLoadCompleted;
+                WebBrowser.Navigating += WebBrowserOnNavigating;
+                WebBrowser.Navigate(BaseUrl);
+
+                WebBrowser.PreviewKeyDown += WebBrowserOnPreviewKeyDown; //Disable backspace
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e); // Log exception
+            }
+        }
+
+        private static void WebBrowserOnPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Back)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void WebBrowserOnNavigating(object sender, NavigatingCancelEventArgs e)
+        {
+            if (_initialLoadPassed)
+            {
+                ShowLoader();
+            }
+        }
+
+        private void ShowLoader()
+        {
             ProgressBar.Visibility = Visibility.Visible;
             WebBrowser.Visibility = Visibility.Hidden;
-            WebBrowser.LoadCompleted += WebBrowserOnInitialLoadCompleted;
-            WebBrowser.LoadCompleted += EvenLoadComplited;
-            WebBrowser.Navigate(BaseUrl);
         }
 
-        private void WebBrowserOnInitialLoadCompleted(object sender, NavigationEventArgs e)
+        private void HideLoader()
         {
-            var acc = _passwordProvider.GetNextCredentials();
-            var pass = _encryptionService.Decrypt(acc.Password);
-            Login(acc.Name, pass);
-            WebBrowser.LoadCompleted -= WebBrowserOnInitialLoadCompleted;
-
+            ProgressBar.Visibility = Visibility.Hidden;
+            WebBrowser.Visibility = Visibility.Visible;
         }
 
-        private void LoginCompleted(object sender, NavigationEventArgs e)
+        private void DisableContextMenu()
         {
+            if (!(WebBrowser.Document is HTMLDocumentEvents2_Event docEventListener))
+            {
+                return;
+            }
 
-            WebBrowser.LoadCompleted -= LoginCompleted;
-            SwitchLanguage();
+            docEventListener.oncontextmenu += obj => false;
         }
 
-        private void Login(string login, string password)
+        private void WebBrowserOnLoadCompleted(object sender, NavigationEventArgs e)
         {
+
+            if (!(WebBrowser.Document is HTMLDocument doc))
+            {
+                return;
+            }
+
+            DisableContextMenu();
+            HideJsScriptErrors(WebBrowser);
+
+            if (doc.IsLoginPage())
+            {
+                Login();
+            }
+            else
+            {
+                RemoveElements();
+                if (!doc.IsRusLanguage())
+                {
+                    SwitchLanguage();
+                }
+
+                if (!doc.IsInPage(WorkingCatalog))
+                {
+                    if (!_initialLoadPassed)
+                    {
+                        WebBrowser.Navigate(WorkingCatalog);
+                    }
+                }
+                else
+                {
+                    _initialLoadPassed = true;
+                    HideLoader();
+                }
+
+                if (_initialLoadPassed)
+                {
+                    HideLoader();
+                }
+            }
+        }
+
+        private void Login()
+        {
+            var account = _passwordProvider.GetNextCredentials();
+            var password = _encryptionService.Decrypt(account.Password);
+            var login = account.Name;
+
             if (!(WebBrowser.Document is HTMLDocument doc))
             {
                 return;
@@ -55,7 +140,6 @@ namespace AvtoPoiskTestApp.Wcf
             doc.SetValueToElementById("password", password);
             doc.SetValueToElementById("username", login);
             doc.ClickElementWithId("btsubmit");
-            WebBrowser.LoadCompleted += LoginCompleted;
         }
 
         private void SwitchLanguage()
@@ -66,35 +150,6 @@ namespace AvtoPoiskTestApp.Wcf
             }
 
             doc.ClickElementWithId(LanguageId);
-            WebBrowser.LoadCompleted += LanguageSwitched;
-
-        }
-
-        private void LanguageSwitched(object sender, NavigationEventArgs e)
-        {
-            WebBrowser.LoadCompleted -= LanguageSwitched;
-            WebBrowser.Navigate(WorkingCatalog);
-            WebBrowser.LoadCompleted += WorkingCatalogReached;
-            GoToWorkingCatalog();
-        }
-
-        private void GoToWorkingCatalog()
-        {
-            
-            if (!(WebBrowser.Document is HTMLDocument doc))
-            {
-                return;
-            }
-
-            doc.getElementById("menu").
-        }
-
-        private void WorkingCatalogReached(object sender, NavigationEventArgs e)
-        {
-            WebBrowser.Visibility = Visibility.Visible;
-            ProgressBar.Visibility = Visibility.Hidden;
-            WebBrowser.LoadCompleted -= WorkingCatalogReached;
-            WebBrowser.LoadCompleted += EvenLoadComplited;
         }
 
         private void RemoveElements()
@@ -103,15 +158,18 @@ namespace AvtoPoiskTestApp.Wcf
             {
                 return;
             }
+
             doc.RemoveElementWithId("tools");
             doc.RemoveElementWithId("footer");
-            
         }
 
-        private void EvenLoadComplited(object sender, NavigationEventArgs e)
+        private static void HideJsScriptErrors(WebBrowser wb)
         {
-            RemoveElements();
+            var fld = typeof(WebBrowser).GetField("_axIWebBrowser2", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (fld == null)
+                return;
+            var obj = fld.GetValue(wb);
+            obj?.GetType().InvokeMember("Silent", BindingFlags.SetProperty, null, obj, new object[] {true});
         }
-
     }
 }

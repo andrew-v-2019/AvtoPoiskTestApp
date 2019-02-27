@@ -1,4 +1,5 @@
-﻿using mshtml;
+﻿using System;
+using mshtml;
 
 namespace AvtoPoiskTestApp.Wcf
 {
@@ -19,14 +20,37 @@ namespace AvtoPoiskTestApp.Wcf
         public static void RemoveElementWithId(this HTMLDocument doc, string id)
         {
             var el = doc?.getElementById(id);
-
-            if (!(el is IHTMLDOMNode childNode))
+            if (el != null && el.innerText != null)
             {
-                return;
+                el.innerText = string.Empty;
+            }
+        }
+
+        public static bool IsLoginPage(this HTMLDocument doc)
+        {
+            var el = doc?.getElementById("password");
+            return el != null;
+        }
+
+        public static bool IsRusLanguage(this HTMLDocument doc)
+        {
+            var el = doc?.getElementById("libelleflag");
+            return el == null || el.parentElement.innerText.ToLower().Contains("русский");
+        }
+
+        public static bool IsInPage(this HTMLDocument doc, string uri)
+        {
+            if (doc == null)
+            {
+                return false;
             }
 
-            var parentNode = childNode.parentNode;
-            parentNode.removeChild(childNode);
+            var result = doc.url.ToLower().Contains(uri.ToLower());
+
+            return result;
         }
+
+     
+
     }
 }

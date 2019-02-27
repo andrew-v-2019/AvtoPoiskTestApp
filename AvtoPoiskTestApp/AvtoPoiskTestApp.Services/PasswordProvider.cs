@@ -9,6 +9,7 @@ namespace AvtoPoiskTestApp.Services
 {
     public class PasswordProvider:IPasswordProvider
     {
+        private readonly IFileService _fileService;
         private const string PasswordsFileName = "credentials.json";
         private readonly string _passwordsFileFullPath;
         private readonly string _initialJson;
@@ -18,7 +19,13 @@ namespace AvtoPoiskTestApp.Services
             _initialJson = initialJson;
             _passwordsFileFullPath = AppDomain.CurrentDomain.BaseDirectory + PasswordsFileName;
         }
-    
+
+        public PasswordProvider(IFileService fileService)
+        {
+            _fileService = fileService;
+            _passwordsFileFullPath = AppDomain.CurrentDomain.BaseDirectory + PasswordsFileName;
+        }
+
 
         public Account GetNextCredentials()
         {
@@ -31,43 +38,30 @@ namespace AvtoPoiskTestApp.Services
 
         private void SaveAccounts(Queue<Account> accounts)
         {
-            using (var file = File.CreateText(_passwordsFileFullPath))
-            {
-                var serializer = new JsonSerializer();
-                serializer.Serialize(file, accounts);
-            }
+            _fileService.SaveToFile(accounts, _passwordsFileFullPath);
         }
 
 
-        private void InitialCreate()
-        {
-            if (string.IsNullOrWhiteSpace(_initialJson))
-            {
-                throw new Exception("Settings not filled");
-            }
-            var items = GetQueueFromJson(_initialJson);
-            SaveAccounts(items);
-        }
+        //private void InitialCreate()
+        //{
+        //    if (string.IsNullOrWhiteSpace(_initialJson))
+        //    {
+        //        throw new Exception("Settings not filled");
+        //    }
+        //    var items = GetQueueFromJson(_initialJson);
+        //    SaveAccounts(items);
+        //}
 
         private Queue<Account> ReadAccounts()
         {
-            if (!File.Exists(_passwordsFileFullPath))
-            {
-                InitialCreate();
-            }
-
-            using (var r = new StreamReader(_passwordsFileFullPath))
-            {
-                var json = r.ReadToEnd();
-                var items = GetQueueFromJson(json);
-                return items;
-            }
+            var accounts = _fileService.ReadFromFile<Queue<Account>>(_passwordsFileFullPath);
+            return accounts;
         }
 
-        private static Queue<Account> GetQueueFromJson(string json)
-        {
-            var items = JsonConvert.DeserializeObject<Queue<Account>>(json);
-            return items;
-        }
+        //private static Queue<Account> GetQueueFromJson(string json)
+        //{
+        //    var items = JsonConvert.DeserializeObject<Queue<Account>>(json);
+        //    return items;
+        //}
     }
 }
